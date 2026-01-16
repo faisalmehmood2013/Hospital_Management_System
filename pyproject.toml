@@ -1,12 +1,23 @@
 [project]
-name = "3-hospital-management-system"
+name = "hospital-management-system"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.11,<3.13"
 dependencies = [
     "flask>=3.1.2",
+    "google-generativeai>=0.8.6",
+    "ipykernel>=7.1.0",
+    "ipython>=9.9.0",
     "langchain>=1.2.4",
     "langchain-community>=0.4.1",
+    "langchain-core>=1.2.7",
+    "langchain-google-genai>=4.2.0",
+    "langchain-huggingface>=1.2.0",
+    "langchain-pinecone>=0.2.13",
+    "pymupdf>=1.26.7",
+    "pypdf>=6.6.0",
+    "pypdf2>=3.0.1",
     "python-dotenv>=1.2.1",
+    "sentence-transformers>=5.2.0",
 ]

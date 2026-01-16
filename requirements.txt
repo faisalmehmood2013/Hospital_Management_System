@@ -1,4 +1,15 @@
 flask
 langchain
-langchain_community
+langchain-community
+langchain-huggingface
+langchain-pinecone
+sentence-transformers
+google-generativeai 
+langchain-google-genai 
+IPython
+ipykernel
 python-dotenv
+pypdf
+pymupdf
+# pinecone-client
+# pinecone-notebooks
