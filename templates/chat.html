@@ -1,0 +1,107 @@
+{% extends "index.html" %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold text-dark">Clinical Intelligence Portal</h2>
+            <p class="text-muted small">Accessing Verified Clinical Documentation & Research</p>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden" style="background: white;">
+        <div id="chat-box" style="height: 500px; overflow-y: auto; padding: 25px; background: #fdfdfd; display: flex; flex-direction: column; gap: 20px;">
+            <div class="message-wrapper ai-wrapper">
+                <div class="message ai-message shadow-sm">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="bg-primary text-white rounded-circle p-2 me-2" style="width: 35px; height: 35px; display: flex; align-items:center; justify-content:center;">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <strong>Clinical Specialist</strong>
+                    </div>
+                    Welcome. We have initialized access to clinical guidelines and specialized medical archives. Please describe the clinical scenario or research query you wish to investigate.
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-4 border-top bg-light">
+            <div id="loader" class="text-muted small mb-2 d-none">
+                <i class="fas fa-sync fa-spin me-2"></i> Reviewing medical archives...
+            </div>
+            <div class="input-group shadow-sm rounded-pill overflow-hidden bg-white border">
+                <input type="text" id="user-input" class="form-control border-0 px-4 py-3" 
+                       placeholder="Enter clinical query or case details..." style="background: transparent; outline: none;"
+                       onkeypress="if(event.key==='Enter') sendMessage()">
+                <button class="btn btn-primary px-4" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #chat-box { scroll-behavior: smooth; }
+    .message-wrapper { display: flex; width: 100%; margin-bottom: 10px; }
+    .ai-wrapper { justify-content: flex-start; }
+    .user-wrapper { justify-content: flex-end; }
+    .message { max-width: 80%; padding: 18px; border-radius: 18px; font-size: 15px; line-height: 1.6; }
+    .ai-message { background: #ffffff; color: #333; border: 1px solid #eef0f2; border-bottom-left-radius: 2px; }
+    .user-message { background: #007bff; color: white; border-bottom-right-radius: 2px; }
+    /* Fix for AI response list and bold text */
+    .ai-message p { margin-bottom: 8px; }
+    .ai-message strong { color: #0056b3; }
+</style>
+
+<script>
+    async function sendMessage() {
+        const input = document.getElementById('user-input');
+        const box = document.getElementById('chat-box');
+        const loader = document.getElementById('loader');
+        const query = input.value.trim();
+        
+        if (!query) return;
+
+        box.innerHTML += `
+            <div class="message-wrapper user-wrapper">
+                <div class="message user-message shadow-sm">${query}</div>
+            </div>`;
+        
+        input.value = '';
+        loader.classList.remove('d-none');
+        box.scrollTop = box.scrollHeight;
+
+        try {
+            const res = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: query })
+            });
+            const data = await res.json();
+
+            // Format the markdown (fixes the ** stars)
+            const formattedResponse = marked.parse(data.response);
+
+            box.innerHTML += `
+                <div class="message-wrapper ai-wrapper">
+                    <div class="message ai-message shadow-sm">
+                        <div class="d-flex align-items-center mb-2">
+                             <div class="bg-primary text-white rounded-circle p-2 me-2" style="width: 35px; height: 35px; display: flex; align-items:center; justify-content:center;">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                            <strong>Clinical Specialist</strong>
+                        </div>
+                        <div class="response-content">${formattedResponse}</div>
+                    </div>
+                </div>`;
+        } catch (e) {
+            console.error(e);
+        } finally {
+            loader.classList.add('d-none');
+            box.scrollTop = box.scrollHeight;
+        }
+    }
+</script>
+{% endblock %}

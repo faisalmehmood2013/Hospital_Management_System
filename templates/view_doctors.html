@@ -1,0 +1,45 @@
+{% extends "index.html" %}
+
+{% block content %}
+<div class="container-fluid py-4" style="background-color: #f8faff; min-height: 100vh;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-dark"><i class="fas fa-users-medical me-2 text-primary"></i>Medical Specialists</h3>
+        <a href="{{ url_for('dashboard_page') }}" class="btn btn-light shadow-sm rounded-pill px-4 border">
+            <i class="fas fa-arrow-left me-2"></i>Dashboard
+        </a>
+    </div>
+
+    <div class="row g-4">
+        {% for doc in doctors %}
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100" style="background-color: #eef4ff;">
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                        <i class="fas fa-user-md fa-2x text-white"></i>
+                    </div>
+                    
+                    <div>
+                        <h5 class="fw-bold mb-1 text-dark" style="font-size: 1.1rem;">{{ doc[0] }}</h5>
+                        <span class="badge bg-white text-primary rounded-pill px-3 shadow-sm" style="font-size: 0.75rem;">
+                            {{ doc[1] }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    /* Clean and simple hover effect */
+    .card {
+        transition: transform 0.2s ease-in-out;
+        border: 1px solid transparent !important;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        border-color: #d1e3ff !important;
+    }
+</style>
+{% endblock %}

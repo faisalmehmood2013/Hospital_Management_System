@@ -1,0 +1,47 @@
+:root {
+    --sidebar-bg: #1a237e;
+    --accent: #3949ab;
+    --bg-light: #f4f7f9;
+    --text-main: #333;
+}
+
+body { 
+    font-family: 'Inter', 'Segoe UI', sans-serif; 
+    background: var(--bg-light); 
+    display: flex; 
+    height: 100vh; 
+    overflow: hidden; 
+}
+
+/* Sidebar */
+.sidebar { width: 280px; background: var(--sidebar-bg); color: white; padding: 25px; transition: 0.3s; }
+.sidebar .logo { font-size: 24px; font-weight: bold; margin-bottom: 40px; color: #fff; }
+.sidebar nav a { 
+    display: block; color: rgba(255,255,255,0.7); text-decoration: none; 
+    padding: 12px 15px; margin-bottom: 8px; border-radius: 10px; transition: 0.2s;
+}
+.sidebar nav a:hover, .sidebar nav a.active { background: var(--accent); color: white; }
+
+/* Main Area */
+.main-content { flex: 1; padding: 30px; overflow-y: auto; }
+.status-badge { background: #e8f5e9; color: #2e7d32; padding: 5px 15px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+
+/* Custom Tabs */
+.custom-tabs { border: none; }
+.custom-tabs .nav-link { 
+    border: none; color: #666; font-weight: 500; padding: 12px; border-radius: 12px; transition: 0.3s;
+}
+.custom-tabs .nav-link.active { background: #007bff !important; color: white !important; }
+
+/* Chat Messages */
+.chat-box { display: flex; flex-direction: column; gap: 15px; overflow-y: auto; height: 500px;}
+.message { padding: 15px 20px; border-radius: 18px; max-width: 75%; font-size: 15px; }
+.ai-message { background: #f8f9fa; border-left: 4px solid #007bff; padding: 15px; border-radius: 8px; }
+.user-message { background: #007bff; color: white; padding: 10px 15px; border-radius: 15px; align-self: flex-end; }
+
+/* Doctor Cards */
+.doctor-card { 
+    transition: transform 0.3s ease; border: 1px solid #eee; border-radius: 15px; overflow: hidden;
+}
+.doctor-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+.slot-btn { font-size: 12px; padding: 5px 10px; margin: 2px; }

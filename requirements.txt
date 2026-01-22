@@ -1,5 +1,6 @@
 flask
 langchain
+langsmith
 langchain-community
 langchain-huggingface
 langchain-core
@@ -11,4 +12,6 @@ IPython
 ipykernel
 python-dotenv
 pymupdf
+langchain-groq
+qrcode[pil]
 

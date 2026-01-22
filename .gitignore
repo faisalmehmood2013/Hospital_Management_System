@@ -2,4 +2,4 @@
 .venv/
 uv.lock
 template.py
-src/logs/
+logs/

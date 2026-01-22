@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Reception Check-In</title>
+    <style>
+        body { background-color: #f8f9fa; }
+        .choice-card { cursor: pointer; transition: 0.3s; border: 2px solid transparent; }
+        .choice-card:hover { border-color: #0d6efd; transform: scale(1.02); }
+    </style>
+</head>
+<body>
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">Welcome to Medical Center</h2>
+        <p class="text-muted">Please select an option to proceed</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <div class="col-md-5">
+            <div class="card h-100 shadow-sm rounded-4 p-4 choice-card" onclick="showCheckInForm()">
+                <div class="text-center mb-3">
+                    <i class="fas fa-calendar-check fa-3x text-primary"></i>
+                </div>
+                <h4 class="text-center fw-bold">I have an Appointment</h4>
+                <p class="text-center small text-muted">Check-in using your Appointment ID sent via Email/SMS.</p>
+                
+                <div id="checkin-form" class="d-none mt-3">
+                    <form action="/process-checkin" method="POST">
+                        <input type="number" name="appointment_id" class="form-control rounded-pill mb-2" placeholder="Enter Appointment ID" required>
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill">Confirm Arrival</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <a href="/register-arrival" class="text-decoration-none text-dark">
+                <div class="card h-100 shadow-sm rounded-4 p-4 choice-card">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-user-plus fa-3x text-success"></i>
+                    </div>
+                    <h4 class="text-center fw-bold">New Patient</h4>
+                    <p class="text-center small text-muted">I don't have a booking. I want to register now.</p>
+                    <div class="btn btn-outline-success w-100 rounded-pill mt-auto">Open Registration Form</div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<script src="https://kit.fontawesome.com/your-code.js"></script>
+<script>
+    function showCheckInForm() {
+        document.getElementById('checkin-form').classList.remove('d-none');
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,334 @@
+{% extends "index.html" %}
+
+{% block content %}
+<div class="container-fluid position-relative">
+    
+    <div id="success-toast" class="alert alert-success border-0 shadow-lg d-none animate__animated animate__fadeInDown" 
+         style="position: fixed; top: 20px; right: 20px; z-index: 9999; border-left: 5px solid #198754 !important; min-width: 350px;">
+        <div class="d-flex align-items-center">
+            <div class="bg-success text-white rounded-circle p-2 me-3">
+                <i class="fas fa-check fa-lg"></i>
+            </div>
+            <div>
+                <h6 class="mb-0 fw-bold">Booking Confirmed!</h6>
+                <p class="mb-0 small text-secondary" id="success-msg-details"></p>
+            </div>
+        </div>
+    </div>
+
+    <ul class="nav nav-pills nav-justified mb-4 bg-white p-2 rounded-4 shadow-sm" id="bookingTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active rounded-pill fw-bold" id="ai-tab" data-bs-toggle="pill" data-bs-target="#ai-content" type="button" role="tab">
+                <i class="fas fa-robot me-2"></i>AI Symptom Triage
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill fw-bold" id="doctors-tab" data-bs-toggle="pill" data-bs-target="#doctors-content" type="button" role="tab" onclick="fetchAllDoctors()">
+                <i class="fas fa-user-md me-2"></i>All Specialists
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="bookingTabsContent">
+        <div class="tab-pane fade show active" id="ai-content" role="tabpanel">
+            <div class="card border-0 shadow-sm p-4 rounded-4 mb-4" style="background: white;">
+                <h4 class="fw-bold mb-1 text-primary"><i class="fas fa-stethoscope me-2"></i> Smart Triage</h4>
+                <p class="text-muted small mb-3">Describe symptoms to find the right specialist.</p>
+                <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border">
+                    <span class="input-group-text border-0 bg-white ps-4"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" id="symptoms-input" class="form-control border-0 shadow-none px-2" 
+                           placeholder="Describe your symptoms..." onkeypress="if(event.key==='Enter') startTriage()">
+                    <button class="btn btn-primary px-5 fw-bold" onclick="startTriage()">Analyze</button>
+                </div>
+            </div>
+            <div id="triage-results" class="row g-4">
+                <div class="col-12 text-center py-5 text-muted">
+                    <i class="fas fa-comment-medical fa-4x mb-3 opacity-25"></i>
+                    <p class="lead">Enter symptoms above to start.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="doctors-content" role="tabpanel">
+            <div id="all-doctors-list" class="row g-4">
+                <div class="col-12 text-center py-5">
+                    <div class="spinner-border text-primary"></div>
+                    <p class="mt-2">Loading all specialists...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="bookingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold"><i class="fas fa-calendar-alt me-2 text-primary"></i> Complete Your Booking</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="clearErrors()"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="small fw-bold text-muted mb-1">Select Date</label>
+                    <input type="date" id="apt-date" class="form-control rounded-pill shadow-none" 
+                           onchange="fetchSlotsByDate()" oninput="hideFieldError('date')" onkeydown="return false">
+                    <div id="err-date" class="text-danger x-small d-none mt-1">Please select a date.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="small fw-bold text-muted mb-1">Available Time Slots</label>
+                    <div id="slots-container" class="d-flex flex-wrap gap-2 mt-1">
+                        <span class="text-muted small">Select a date above to see slots.</span>
+                    </div>
+                    <div id="err-slot" class="text-danger x-small d-none mt-1">Please pick a time slot.</div>
+                </div>
+                <hr class="opacity-25 my-4">
+                <div class="mb-2">
+                    <input type="text" id="patient-name" class="form-control rounded-pill shadow-none" placeholder="Full Name" oninput="hideFieldError('name')">
+                    <div id="err-name" class="text-danger x-small d-none mt-1">Full name is required.</div>
+                </div>
+                <div class="mb-2">
+                    <input type="email" id="patient-email" class="form-control rounded-pill shadow-none" placeholder="Email Address" oninput="hideFieldError('email')">
+                    <div id="err-email" class="text-danger x-small d-none mt-1">Valid email is required.</div>
+                </div>
+                <div class="mb-3">
+                    <input type="tel" id="patient-whatsapp" class="form-control rounded-pill shadow-none" placeholder="WhatsApp Number" oninput="hideFieldError('whatsapp')">
+                    <div id="err-whatsapp" class="text-danger x-small d-none mt-1">WhatsApp number is required.</div>
+                </div>
+                <input type="hidden" id="selected-doc-id">
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button class="btn btn-primary w-100 rounded-pill py-2 fw-bold shadow" onclick="confirmBooking()">Confirm Appointment</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let selectedSlot = null;
+
+    // Helper: Hide Errors
+    function hideFieldError(id) {
+        const errDiv = document.getElementById(`err-${id}`);
+        if(errDiv) errDiv.classList.add('d-none');
+        const input = document.getElementById(`patient-${id}`) || document.getElementById(`apt-${id}`);
+        if(input) input.style.borderColor = "#dee2e6";
+    }
+
+    // UPDATED: Function to prevent past dates
+    function setMinDate() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('apt-date').setAttribute('min', today);
+    }
+
+    function createDoctorCard(doc) {
+        return `
+        <div class="col-12 mb-3">
+            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden doctor-card">
+                <div class="row g-0">
+                    <div class="col-md-4 bg-light d-flex align-items-center p-4">
+                        <div class="bg-primary-subtle p-3 rounded-circle me-3 text-primary shadow-sm"><i class="fas fa-user-md fa-3x"></i></div>
+                        <div>
+                            <h5 class="fw-bold mb-1 text-dark">Dr. ${doc.name}</h5>
+                            <span class="badge bg-primary text-white rounded-pill px-3 py-2 small">${doc.specialization}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-5 p-4 border-start border-end">
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <div class="text-muted x-small text-uppercase fw-bold">Location</div>
+                                <div class="fw-semibold text-dark">Room ${doc.room}</div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <div class="text-muted x-small text-uppercase fw-bold">Fee</div>
+                                <div class="fw-semibold text-success">Rs. ${doc.fee}</div>
+                            </div>
+                            <div class="col-12">
+                                <div class="text-muted x-small text-uppercase fw-bold">Practice Hours</div>
+                                <div class="fw-semibold text-dark">${doc.time}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 p-4 d-flex align-items-center justify-content-center">
+                        <button class="btn btn-primary btn-lg rounded-pill px-4 fw-bold w-100" onclick="loadSlots(${doc.id})">Book Now</button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    async function startTriage() {
+        const sym = document.getElementById('symptoms-input').value;
+        const resArea = document.getElementById('triage-results');
+        if (!sym.trim()) return;
+        resArea.innerHTML = `<div class="col-12 text-center py-5"><div class="spinner-grow text-primary mb-3"></div><p>Analyzing symptoms...</p></div>`;
+        const res = await fetch('/get_specialists', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({symptoms: sym})
+        });
+        const data = await res.json();
+        resArea.innerHTML = "";
+        data.doctors.forEach(doc => resArea.innerHTML += createDoctorCard(doc));
+    }
+
+    async function fetchAllDoctors() {
+        const container = document.getElementById('all-doctors-list');
+        const res = await fetch('/get_all_doctors');
+        const data = await res.json();
+        container.innerHTML = "";
+        data.doctors.forEach(doc => container.innerHTML += createDoctorCard(doc));
+    }
+
+    // UPDATED: loadSlots now handles Modal Reset and Min Date
+    function loadSlots(docId) {
+        document.getElementById('selected-doc-id').value = docId;
+        document.getElementById('slots-container').innerHTML = '<span class="text-muted small">Please select a date above to see available slots.</span>';
+        document.getElementById('apt-date').value = ""; 
+        selectedSlot = null;
+        
+        // Prevent past dates
+        setMinDate();
+        
+        const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+        bookingModal.show();
+    }
+
+    // UPDATED: fetchSlotsByDate handles the slot loading logic
+    async function fetchSlotsByDate() {
+        const docId = document.getElementById('selected-doc-id').value;
+        const aptDate = document.getElementById('apt-date').value;
+        const container = document.getElementById('slots-container');
+
+        if (!aptDate) return;
+
+        container.innerHTML = '<div class="spinner-border spinner-border-sm text-primary"></div> Checking slots...';
+
+        try {
+            const res = await fetch('/get_slots', {
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({doc_id: docId, date: aptDate})
+            });
+            
+            const data = await res.json();
+            container.innerHTML = ""; 
+            
+            if(data.status === "success") {
+                if (data.slots.length === 0) {
+                    container.innerHTML = '<span class="text-danger small">No slots available for this date.</span>';
+                    return;
+                }
+
+                data.slots.forEach(slot => {
+                    const btn = document.createElement('button');
+                    btn.className = "btn btn-sm rounded-pill px-3 m-1";
+                    
+                    // FIX: Use slot.time to fix [object Object]
+                    btn.innerText = slot.time; 
+                    
+                    if (slot.is_booked) {
+                        btn.classList.add("btn-secondary", "disabled");
+                        btn.style.cursor = "not-allowed";
+                    } else {
+                        btn.classList.add("btn-outline-primary", "slot-btn");
+                        btn.onclick = () => {
+                            document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('btn-primary', 'text-white'));
+                            btn.classList.add('btn-primary', 'text-white');
+                            selectedSlot = slot.time; 
+                            hideFieldError('slot');
+                        };
+                    }
+                    container.appendChild(btn);
+                });
+            } else {
+                container.innerHTML = `<span class="text-danger small">${data.message}</span>`;
+            }
+        } catch (error) {
+            container.innerHTML = '<span class="text-danger small">Error loading slots.</span>';
+        }
+    }
+
+    function clearErrors() {
+        selectedSlot = null;
+        ['name','email','whatsapp','date','slot'].forEach(id => hideFieldError(id));
+        document.getElementById('patient-name').value = "";
+        document.getElementById('patient-email').value = "";
+        document.getElementById('patient-whatsapp').value = "";
+        document.getElementById('apt-date').value = "";
+    }
+
+    async function confirmBooking() {
+    const fields = {
+        name: document.getElementById('patient-name'),
+        email: document.getElementById('patient-email'),
+        whatsapp: document.getElementById('patient-whatsapp'),
+        date: document.getElementById('apt-date'),
+        docId: document.getElementById('selected-doc-id').value
+    };
+
+    let isValid = true;
+    
+    // Validation Logic
+    if(!fields.date.value) { document.getElementById('err-date').classList.remove('d-none'); fields.date.style.borderColor = "red"; isValid = false; }
+    if(!selectedSlot) { document.getElementById('err-slot').classList.remove('d-none'); isValid = false; }
+    if(!fields.name.value) { document.getElementById('err-name').classList.remove('d-none'); fields.name.style.borderColor = "red"; isValid = false; }
+    
+    // Email Validation
+    if(!fields.email.value || !fields.email.value.includes('@')) { 
+        document.getElementById('err-email').classList.remove('d-none'); 
+        fields.email.style.borderColor = "red"; 
+        isValid = false; 
+    }
+    
+    if(!fields.whatsapp.value) { 
+        document.getElementById('err-whatsapp').classList.remove('d-none'); 
+        fields.whatsapp.style.borderColor = "red"; 
+        isValid = false; 
+    }
+
+    if(!isValid) return;
+
+    // Backend ko data bhejte waqt Email aur WhatsApp shamil hain
+    try {
+        const res = await fetch('/confirm_booking', {
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                patient: fields.name.value, 
+                email: fields.email.value,      // Sending to backend
+                whatsapp: fields.whatsapp.value, // Sending to backend
+                date: fields.date.value,
+                time: selectedSlot, 
+                doc_id: fields.docId
+            })
+        });
+
+        const result = await res.json();
+        
+        if(result.status === 'success') {
+            bootstrap.Modal.getInstance(document.getElementById('bookingModal')).hide();
+            const toast = document.getElementById('success-toast');
+            document.getElementById('success-msg-details').innerText = `${fields.name.value}, your appointment is scheduled for ${fields.date.value} at ${selectedSlot}.`;
+            toast.classList.remove('d-none');
+            
+            setTimeout(() => {
+                toast.classList.add('d-none');
+                window.location.href = "/admin/all-appointments"; // Direct detail page par le jaye ga
+            }, 3000);
+        } else {
+            alert("Error: " + result.message);
+        }
+    } catch (error) {
+        console.error("Booking Error:", error);
+    }
+}
+</script>
+
+<style>
+    .nav-pills .nav-link.active { background-color: #0d6efd !important; }
+    .nav-link { color: #6c757d; }
+    .doctor-card { transition: 0.3s; border: 1px solid #f0f0f0 !important; }
+    .doctor-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important; }
+    .bg-primary-subtle { background-color: #eef4ff !important; }
+    .x-small { font-size: 0.7rem; }
+</style>
+{% endblock %}

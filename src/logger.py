@@ -1,27 +1,16 @@
 import logging
 import os
-import sys
-from datetime import datetime
 
-# 1. Log file ka naam set karein
-LOG_FILE = f"{datetime.now().strftime('%m_%d_%Y_%H_%M_%S')}.log"
+# Logs folder banayein agar nahi hai
+log_dir = "logs"
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
 
-# 2. Logs folder ka path (Project root mein banane ke liye)
-log_path = os.path.join(os.getcwd(), "logs")
-os.makedirs(log_path, exist_ok=True)
-
-LOG_FILEPATH = os.path.join(log_path, LOG_FILE)
-
-# 3. Logging configuration
 logging.basicConfig(
+    filename=os.path.join(log_dir, "medai.log"),
     level=logging.INFO,
-    format="[%(asctime)s] %(lineno)d %(name)s - %(levelname)s - %(message)s",
-    
-    handlers=[
-        logging.FileHandler(LOG_FILEPATH), # File mein save karega
-        logging.StreamHandler(sys.stdout)  # Terminal par bhi dikhayega
-    ]
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
 )
 
-# Taake isay doosri files mein import kiya ja sake
-# from src.logger import logging
+logger = logging.getLogger("MedAI_System")
